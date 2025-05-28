@@ -16,4 +16,7 @@ urlpatterns = [
     
     # 회원정보 조회 및 수정
     path('profile/', views.UserProfileView.as_view(), name='profile'),
+    
+    # 비밀번호 변경
+    path('change-password/', views.ChangePasswordView.as_view(), name='change_password'),
 ]

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -39,6 +40,44 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password2')  # password2 필드 제거
         user = User.objects.create_user(**validated_data)
+        return user
+
+
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    old_password = serializers.CharField(write_only=True, required=True)
+    new_password = serializers.CharField(write_only=True, required=True)
+    confirm_new_password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ('old_password', 'new_password', 'confirm_new_password')
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError('현재 비밀번호가 일치하지 않습니다.')
+        return value
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_new_password']:
+            raise serializers.ValidationError({
+                'confirm_new_password': '새 비밀번호가 일치하지 않습니다.'
+            })
+        
+        try:
+            validate_password(data['new_password'])
+        except ValidationError as e:
+            raise serializers.ValidationError({
+                'new_password': list(e.messages)
+            })
+            
+        return data
+
+    def save(self, **kwargs):
+        password = self.validated_data['new_password']
+        user = self.context['request'].user
+        user.set_password(password)
+        user.save()
         return user
 
 class LoginSerializer(serializers.Serializer):
