@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     
-    # REST Framework
+    # 써드파티 앱
     'rest_framework',
     'rest_framework_simplejwt',  # JWT 인증
     'drf_yasg',  # API 문서화
@@ -55,8 +55,9 @@ INSTALLED_APPS = [
     # CORS
     'corsheaders',
     
-    # 프로젝트 앱
+    # 로컬 앱
     'accounts',  # 회원 관리
+    'products',  # 추가
 ]
 
 MIDDLEWARE = [
@@ -152,14 +153,15 @@ SWAGGER_SETTINGS = {
         'Bearer': {
             'type': 'apiKey',
             'name': 'Authorization',
-            'in': 'header'
+            'in': 'header',
+            'description': 'JWT 토큰을 입력해주세요. (예: Bearer your_token_here)'
         }
     },
     'USE_SESSION_AUTH': False,
-    'DEFAULT_AUTO_SCHEMA_CLASS': 'drf_yasg.inspectors.SwaggerAutoSchema',
+    'JSON_EDITOR': True,
     'DEFAULT_FIELD_INSPECTORS': [
         'drf_yasg.inspectors.CamelCaseJSONFilter',
-        'drf_yasg.inspectors.ReferencingSerializerInspector',
+        'drf_yasg.inspectors.InlineSerializerInspector',
         'drf_yasg.inspectors.RelatedFieldInspector',
         'drf_yasg.inspectors.ChoiceFieldInspector',
         'drf_yasg.inspectors.FileFieldInspector',
@@ -167,6 +169,16 @@ SWAGGER_SETTINGS = {
         'drf_yasg.inspectors.SimpleFieldInspector',
         'drf_yasg.inspectors.StringDefaultFieldInspector',
     ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.JSONParser',
+    ],
+    'DEFAULT_AUTO_SCHEMA_CLASS': 'drf_yasg.inspectors.SwaggerAutoSchema',
+    'COMPONENT_SPLIT_REQUEST': True,
+    'DEFAULT_INFO': 'RePlay.urls.schema_view',
+    'DEFAULT_MODEL_RENDERING': 'model',
+    'DEFAULT_GENERATOR_CLASS': 'drf_yasg.generators.OpenAPISchemaGenerator',
 }
 
 # REST Framework 설정
@@ -176,7 +188,11 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
-    )
+    ),
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.FormParser',
+    ]
 }
 
 # JWT 설정
